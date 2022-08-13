@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/streadway/amqp"
 )
 
 var DB *gorm.DB
@@ -28,6 +28,15 @@ func Database(connStr string) {
 	db.DB().SetMaxOpenConns(100) // 设置最大连接数
 
 	DB = db
-
 	migration()
+}
+
+var MQ *amqp.Connection
+
+func RabbitMQ(connStr string) {
+	mq, err := amqp.Dial(connStr)
+	if err != nil {
+		panic(err)
+	}
+	MQ = mq
 }

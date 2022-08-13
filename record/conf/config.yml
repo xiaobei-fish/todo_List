@@ -9,3 +9,10 @@ mysql:
   user: root
   password: qwe123
   dbname: todo_List
+
+rabbitmq:
+  rabbitMQ: amqp
+  MQuser: guest
+  MQpassword: guest
+  MQhost: 127.0.0.1
+  MQport: 5672
