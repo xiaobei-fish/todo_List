@@ -16,3 +16,9 @@
 user/conf/config.yml
 user/go.sum
 .idea
+gateway/conf/config.yml
+gateway/go.sum
+rabMQ/conf/config.yml
+rabMQ/go.sum
+record/conf/config.yml
+record/go.sum
