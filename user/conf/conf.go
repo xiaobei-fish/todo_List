@@ -2,6 +2,7 @@ package conf
 
 import (
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 	"os"
 	"strings"
@@ -24,7 +25,7 @@ func LoadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath(dir + "/conf")
-	fmt.Println("config path:" + dir)
+	fmt.Println("conf path:" + dir)
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

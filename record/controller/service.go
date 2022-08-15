@@ -7,6 +7,7 @@ import (
 	"github.com/streadway/amqp"
 	"record/model"
 	"record/service"
+	"strconv"
 )
 
 // 备忘录操作
@@ -38,6 +39,17 @@ func (*RecordService) FormRecord(ctx context.Context, req *service.RecordRequest
 func (*RecordService) GetRecord(ctx context.Context, req *service.RecordRequest, resp *service.RecordInfoResponse) error {
 	record := model.Record{}
 	model.DB.First(&record, req.Id) // 返回一条id的记录
+	// 20条历史记录储存在redis中
+	key := strconv.Itoa(int(req.Uid)) + "-history"
+	model.RE.RPush(ctx, key, "get a record | title = "+record.Title)
+	length, err := model.RE.LLen(ctx, key).Result()
+	if err != nil {
+		err = errors.New("redis.LLen err | err: " + err.Error())
+		panic(err)
+	}
+	if length > 20 {
+		model.RE.LPop(ctx, key)
+	}
 
 	res := SetRecord(record) // 绑定到响应信息内
 	resp.RecordInfo = res
@@ -60,6 +72,18 @@ func (*RecordService) GetRecordsList(ctx context.Context, req *service.RecordReq
 		err = errors.New("MySql select err | err: " + err.Error())
 		return err
 	}
+	// 20条历史记录储存在redis中
+	key := strconv.Itoa(int(req.Uid)) + "-history"
+	model.RE.RPush(ctx, key, "get recordList | limit = "+strconv.Itoa(int(req.Limit)))
+	length, err0 := model.RE.LLen(ctx, key).Result()
+	if err0 != nil {
+		err0 = errors.New("redis.LLen err | err: " + err0.Error())
+		panic(err0)
+	}
+	if length > 20 {
+		model.RE.LPop(ctx, key)
+	}
+
 	// 将结果封装到切片中
 	var res []*service.RecordModel
 	for _, v := range recordList {
@@ -81,6 +105,17 @@ func (*RecordService) UpdateRecord(ctx context.Context, req *service.RecordReque
 	record.Title = req.Title
 	record.Content = req.Content
 	record.Status = int(req.Status)
+	// 20条历史记录储存在redis中
+	key := strconv.Itoa(int(req.Uid)) + "-history"
+	model.RE.RPush(ctx, key, "update a record | title = "+record.Title)
+	length, err0 := model.RE.LLen(ctx, key).Result()
+	if err0 != nil {
+		err0 = errors.New("redis.LLen err | err: " + err0.Error())
+		panic(err0)
+	}
+	if length > 20 {
+		model.RE.LPop(ctx, key)
+	}
 	// 更新保存
 	model.DB.Save(&record)
 	resp.RecordInfo = SetRecord(record)
@@ -94,6 +129,39 @@ func (*RecordService) DeleteRecord(ctx context.Context, req *service.RecordReque
 	if err != nil {
 		err = errors.New("MySql delete err | err: " + err.Error())
 		return err
+	}
+	// 20条历史记录储存在redis中
+	key := strconv.Itoa(int(req.Uid)) + "-history"
+	model.RE.RPush(ctx, key, "delete a record | id = "+strconv.Itoa(int(req.Id)))
+	length, err0 := model.RE.LLen(ctx, key).Result()
+	if err0 != nil {
+		err0 = errors.New("redis.LLen err | err: " + err0.Error())
+		panic(err0)
+	}
+	if length > 20 {
+		model.RE.LPop(ctx, key)
+	}
+	return nil
+}
+
+// 返回历史记录
+func (*RecordService) OpHistory(ctx context.Context, req *service.HistoryRequest, resp *service.HistoryInfo) error {
+	key := strconv.Itoa(int(req.Uid)) + "-history"
+	historySlice, err := model.RE.LRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		return err
+	}
+	resp.History = historySlice
+
+	// 20条历史记录储存在redis中
+	model.RE.RPush(ctx, key, "get opt history")
+	length, err0 := model.RE.LLen(ctx, key).Result()
+	if err0 != nil {
+		err0 = errors.New("redis.LLen err | err: " + err0.Error())
+		panic(err0)
+	}
+	if length > 20 {
+		model.RE.LPop(ctx, key)
 	}
 	return nil
 }

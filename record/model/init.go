@@ -1,7 +1,9 @@
 package model
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/jinzhu/gorm"
 	"github.com/streadway/amqp"
 )
@@ -39,4 +41,15 @@ func RabbitMQ(connStr string) {
 		panic(err)
 	}
 	MQ = mq
+}
+
+var RE *redis.Client
+
+func Redis(opt *redis.Options) {
+	re := redis.NewClient(opt)
+	_, err := re.Ping(context.Background()).Result()
+	if err != nil {
+		panic(err)
+	}
+	RE = re
 }

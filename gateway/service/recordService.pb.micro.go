@@ -47,6 +47,7 @@ type RecordService interface {
 	GetRecord(ctx context.Context, in *RecordRequest, opts ...client.CallOption) (*RecordInfoResponse, error)
 	UpdateRecord(ctx context.Context, in *RecordRequest, opts ...client.CallOption) (*RecordInfoResponse, error)
 	DeleteRecord(ctx context.Context, in *RecordRequest, opts ...client.CallOption) (*RecordInfoResponse, error)
+	OpHistory(ctx context.Context, in *HistoryRequest, opts ...client.CallOption) (*HistoryInfo, error)
 }
 
 type recordService struct {
@@ -111,6 +112,16 @@ func (c *recordService) DeleteRecord(ctx context.Context, in *RecordRequest, opt
 	return out, nil
 }
 
+func (c *recordService) OpHistory(ctx context.Context, in *HistoryRequest, opts ...client.CallOption) (*HistoryInfo, error) {
+	req := c.c.NewRequest(c.name, "RecordService.OpHistory", in)
+	out := new(HistoryInfo)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for RecordService service
 
 type RecordServiceHandler interface {
@@ -119,6 +130,7 @@ type RecordServiceHandler interface {
 	GetRecord(context.Context, *RecordRequest, *RecordInfoResponse) error
 	UpdateRecord(context.Context, *RecordRequest, *RecordInfoResponse) error
 	DeleteRecord(context.Context, *RecordRequest, *RecordInfoResponse) error
+	OpHistory(context.Context, *HistoryRequest, *HistoryInfo) error
 }
 
 func RegisterRecordServiceHandler(s server.Server, hdlr RecordServiceHandler, opts ...server.HandlerOption) error {
@@ -128,6 +140,7 @@ func RegisterRecordServiceHandler(s server.Server, hdlr RecordServiceHandler, op
 		GetRecord(ctx context.Context, in *RecordRequest, out *RecordInfoResponse) error
 		UpdateRecord(ctx context.Context, in *RecordRequest, out *RecordInfoResponse) error
 		DeleteRecord(ctx context.Context, in *RecordRequest, out *RecordInfoResponse) error
+		OpHistory(ctx context.Context, in *HistoryRequest, out *HistoryInfo) error
 	}
 	type RecordService struct {
 		recordService
@@ -158,4 +171,8 @@ func (h *recordServiceHandler) UpdateRecord(ctx context.Context, in *RecordReque
 
 func (h *recordServiceHandler) DeleteRecord(ctx context.Context, in *RecordRequest, out *RecordInfoResponse) error {
 	return h.RecordServiceHandler.DeleteRecord(ctx, in, out)
+}
+
+func (h *recordServiceHandler) OpHistory(ctx context.Context, in *HistoryRequest, out *HistoryInfo) error {
+	return h.RecordServiceHandler.OpHistory(ctx, in, out)
 }

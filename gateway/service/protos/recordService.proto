@@ -34,10 +34,20 @@ message RecordInfoResponse{
   RecordModel RecordInfo=1;
 }
 
+message HistoryInfo{
+  repeated string History=1;
+}
+
+message HistoryRequest{
+  //@inject_tag: json:"Uid" form:"Uid"
+  uint64 Uid = 1;
+}
+
 service RecordService{
   rpc FormRecord(RecordRequest) returns(RecordInfoResponse);
   rpc GetRecordsList(RecordRequest) returns(RecordListResponse);
   rpc GetRecord(RecordRequest) returns(RecordInfoResponse);
   rpc UpdateRecord(RecordRequest) returns(RecordInfoResponse);
   rpc DeleteRecord(RecordRequest) returns(RecordInfoResponse);
+  rpc OpHistory(HistoryRequest) returns(HistoryInfo);
 }

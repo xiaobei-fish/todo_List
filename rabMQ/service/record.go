@@ -1,10 +1,12 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"rabMQ/model"
+	"strconv"
 )
 
 // 从rabbitMQ读消息写库
@@ -26,6 +28,7 @@ func SaveRecord() {
 	}
 	// 监听状态，需要阻塞主进程
 	go func() {
+		ctx := context.Background()
 		for msg := range msgs {
 			var record model.Record
 			err := json.Unmarshal(msg.Body, &record)
@@ -34,6 +37,18 @@ func SaveRecord() {
 				panic(err)
 			}
 			model.DB.Create(&record)
+			// 20条历史记录储存在redis中
+			key := strconv.Itoa(int(record.Uid)) + "-history"
+			model.RE.RPush(ctx, key, "add a record | title = "+record.Title)
+			length, err0 := model.RE.LLen(ctx, key).Result()
+			if err0 != nil {
+				err0 = errors.New("redis.LLen err | err: " + err0.Error())
+				panic(err0)
+			}
+			if length > 20 {
+				model.RE.LPop(ctx, key)
+			}
+
 			log.Println("Done")
 			msg.Ack(false)
 		}
