@@ -35,6 +35,7 @@ func NewRoute(service ...interface{}) *gin.Engine {
 
 		urls.GET("/recordList", middleware.AuthMiddleware(), handlers.ListRecord) // 查
 		urls.GET("/recordInfo", middleware.AuthMiddleware(), handlers.RecordInfo)
+		urls.GET("/recordHistory", middleware.AuthMiddleware(), handlers.OpHistory)
 	}
 
 	return route

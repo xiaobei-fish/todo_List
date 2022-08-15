@@ -21,10 +21,10 @@ func Init() {
 
 func LoadConfig() {
 	dir, _ := os.Getwd()
-	viper.SetConfigName("config")
+	viper.SetConfigName("conf")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath(dir + "/conf")
-	fmt.Println("config path:" + dir)
+	fmt.Println("conf path:" + dir)
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

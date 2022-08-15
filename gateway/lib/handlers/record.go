@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"errors"
+	"gateway/pkg/logging"
 	"gateway/pkg/utils"
 	"gateway/service"
 	"github.com/gin-gonic/gin"
@@ -128,4 +130,34 @@ func ListRecord(ctx *gin.Context) {
 	utils.RecordError(err)
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "get recordList successfully", "data": resp.RecordList, "cnt:": resp.Count})
+}
+
+// 返回历史记录
+func OpHistory(ctx *gin.Context) {
+	var req service.HistoryRequest
+	err := ctx.Bind(&req)
+	if err != nil {
+		err = errors.New("historyService | err: " + err.Error())
+		logging.Info(err)
+		panic(err)
+	}
+	// 从gin.Key中取出服务实例
+	recordService := ctx.Keys["recordService"].(service.RecordService)
+	// token认证
+	token, claim, err := utils.ParseToken(ctx.GetHeader("Authorization"))
+	if err != nil || !token.Valid { //解析错误或者过期等
+		ctx.JSON(http.StatusUnauthorized, gin.H{"code": 401, "msg": "权限不足"})
+		ctx.Abort()
+		return
+	}
+	// 绑定
+	req.Uid = uint64(claim.Id)
+	resp, err := recordService.OpHistory(context.Background(), &req)
+
+	if err != nil {
+		err = errors.New("historyService | err: " + err.Error())
+		logging.Info(err)
+		panic(err)
+	}
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "get history successfully", "data": resp.History})
 }
